@@ -6,14 +6,16 @@ using UnityEngine.Serialization;
 public class PlayerLandMovement : MonoBehaviour
 {
     [Header("Movement")]
-    public float walkSpeed = 5f;
-    public float runSpeed = 9f;
+    public float walkSpeed = 10f;
+    public float runSpeed = 19f;
     public float gravity = -9.81f;
-    [FormerlySerializedAs("jumpForce")] public float jumpHeight = 1.5f;
+    [FormerlySerializedAs("jumpForce")] public float jumpHeight = 4.5f;
     
     [Header("Look")]
     public float mouseSensitivity = 5f;
     public Transform cameraTransform;
+    
+    [Header("Ground Check")]
     public float groundDistance = 0.4f;
     public LayerMask groundMask;
     
@@ -23,8 +25,6 @@ public class PlayerLandMovement : MonoBehaviour
     public float CameraFollowSpeed;
     
     private CharacterController _characterController;
-    private Rigidbody2D _rb;
-    private Vector2 _moveInput;
     private Vector3 _velocity;
     private float _xRotation;
     private bool _isGrounded;
@@ -36,7 +36,6 @@ public class PlayerLandMovement : MonoBehaviour
     }
     void Start()
     {
-        _rb = GetComponent<Rigidbody2D>();
         _playerInput = new PlayerInput();
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
@@ -51,8 +50,8 @@ public class PlayerLandMovement : MonoBehaviour
 
     void HandleLook()
     {
-        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity;
-        float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity;
+        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime;
+        float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity * Time.deltaTime;
         
         _xRotation -= mouseY;
         _xRotation = Mathf.Clamp(_xRotation, -90f, 90f);
@@ -65,9 +64,11 @@ public class PlayerLandMovement : MonoBehaviour
     {
         bool grounded = _characterController.isGrounded;
         if (grounded && _velocity.y < 0f) _velocity.y = -2f;
+        
         float h = Input.GetAxis("Horizontal");
         float v = Input.GetAxis("Vertical");
         bool running = Input.GetKey(KeyCode.LeftShift);
+        
         Vector3 move = transform.right * h + transform.forward * v;
         float speed = running ? runSpeed : walkSpeed;
         _characterController.Move(move * speed * Time.deltaTime);
@@ -92,6 +93,7 @@ public class PlayerLandMovement : MonoBehaviour
 
     void CheckIfGrounded()
     {
-        _isGrounded = Physics2D.OverlapCircle(cameraTransform.position, groundDistance, groundMask);
+        Vector3 feetPosition = transform.position + Vector3.down * (_characterController.height / 2f);
+        _isGrounded = Physics.CheckSphere(feetPosition, groundDistance, groundMask);
     }
 }

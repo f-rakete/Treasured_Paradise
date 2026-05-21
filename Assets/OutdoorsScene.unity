@@ -1130,7 +1130,7 @@ AudioListener:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1029112141}
-  m_Enabled: 1
+  m_Enabled: 0
 --- !u!4 &1029112145
 Transform:
   m_ObjectHideFlags: 0
@@ -1546,7 +1546,7 @@ Camera:
     height: 1
   near clip plane: 0.3
   far clip plane: 1000
-  field of view: 60
+  field of view: 31
   orthographic: 0
   orthographic size: 5
   m_Depth: 0
@@ -1636,19 +1636,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3738d1a5685054082aea7788304b38f0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerLandMovement
-  walkSpeed: 5
-  runSpeed: 9
-  gravity: -9.81
-  jumpHeight: 1.5
-  mouseSensitivity: 5
-  cameraTransform: {fileID: 0}
+  walkSpeed: 12.89
+  runSpeed: 21.38
+  gravity: -6.79
+  jumpHeight: 5.56
+  mouseSensitivity: 30
+  cameraTransform: {fileID: 1440312016}
   groundDistance: 0.4
   groundMask:
     serializedVersion: 2
     m_Bits: 64
   CameraRig: {fileID: 1440312019}
   CameraTarget: {fileID: 1029112142}
-  CameraFollowSpeed: 10
+  CameraFollowSpeed: 19.5
 --- !u!1 &1614434443
 GameObject:
   m_ObjectHideFlags: 0
