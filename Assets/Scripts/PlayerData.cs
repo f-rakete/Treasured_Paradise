@@ -1,29 +1,31 @@
 using System.Collections.Generic;
-using UnityEngine;
+using NUnit.Framework;
 
-namespace Player
+[System.Serializable]
+public class PlayerData
 {
-    public class PlayerData
-    {
-        public string PlayerName;
+    public string PlayerName;
         
-        //Inventory
-        public List<Item> Inventory = new List<Item>();
-        public Dictionary<string, GearItem> EquippedGear = new Dictionary<string, GearItem>();
+    //Inventory
+    public List<Item> Inventory = new List<Item>();
+    public Dictionary<string, GearItem> EquippedGear = new Dictionary<string, GearItem>();
 
-        //Ecomony
-        public float currencyBalance;
+    //Ecomony
+    public float currencyBalance;
         
-        //Oxygen
-        public float OxygenMax;
-        public float OxygenCurrent;
-        public readonly OxygenTier CurrentOxygenTier = OxygenTier.Snorkel;
+    //Oxygen
+    public float OxygenMax;
+    public float OxygenCurrent;
+    public readonly OxygenTier CurrentOxygenTier = OxygenTier.Snorkel;
         
-        //Health Level
-        public float healthMeter;
-
-
-    }
+    //Health Level
+    public float healthMeter;
     
-    public enum OxygenTier { Snorkel, BasicScuba, Rebreather }
+    //Journal + Lore
+    public HashSet<string> discoveredLoreEntries = new HashSet<string>();
+    
+    //Map
+    public List<MapMarker> mapMarkers = new List<MapMarker>();
 }
+    
+public enum OxygenTier { Snorkel, BasicScuba, Rebreather }
