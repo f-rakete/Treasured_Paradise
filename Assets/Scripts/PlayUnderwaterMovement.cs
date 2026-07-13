@@ -15,11 +15,7 @@ public class PlayerUnderwaterMovement : MonoBehaviour
     [Header("References")]
     public Transform cameraTransform;
     public OxygenSystem oxygenSystem;
-    public float mouseSensitivity = 15f;
-    
     private Rigidbody _rigidbody;
-    private float _xRotation;
-    private float _yRotation;
     [SerializeField] private float _currentDepth;
 
     void Awake()
@@ -30,7 +26,6 @@ public class PlayerUnderwaterMovement : MonoBehaviour
 
     void Update()
     {
-        HandleLook();
         UpdateDepth();
     }
 
@@ -38,18 +33,6 @@ public class PlayerUnderwaterMovement : MonoBehaviour
     {
         HandleSwim();
         ApplyWaterResistance();
-    }
-
-    void HandleLook()
-    {
-        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity;
-        float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity;
-        
-        _xRotation -= mouseY;
-        _xRotation = Mathf.Clamp(_xRotation, -90f, 90f);
-        
-        cameraTransform.localRotation = Quaternion.Euler(_xRotation, 0f, 0f);
-        transform.Rotate(Vector3.up, mouseX);
     }
 
     void HandleSwim()
