@@ -1456,15 +1456,10 @@ MonoBehaviour:
   runSpeed: 13.7
   gravity: -9.02
   jumpHeight: 2.92
-  mouseSensitivity: 85
-  cameraTransform: {fileID: 1440312016}
   groundDistance: 1
   groundMask:
     serializedVersion: 2
     m_Bits: 64
-  CameraRig: {fileID: 1440312019}
-  CameraTarget: {fileID: 1539251607}
-  CameraFollowSpeed: 19.5
   characterAnimator: {fileID: 2033586670}
 --- !u!95 &1511647259
 Animator:
@@ -2462,15 +2457,10 @@ MonoBehaviour:
   runSpeed: 10
   gravity: -9.81
   jumpHeight: 1.5
-  mouseSensitivity: 75
-  cameraTransform: {fileID: 2116338403}
   groundDistance: 0.5
   groundMask:
     serializedVersion: 2
     m_Bits: 64
-  CameraRig: {fileID: 1440312019}
-  CameraTarget: {fileID: 1539251607}
-  CameraFollowSpeed: 1.5
   characterAnimator: {fileID: 1511647259}
 --- !u!1 &2088097971
 GameObject:
