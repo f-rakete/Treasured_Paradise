@@ -12,20 +12,34 @@ public class PlayerUnderwaterMovement : MonoBehaviour
     public float underwaterAngularDrag = 2f;
     public float dragResistanceScale = 0.05f; //for extra drag per metre depth
         
-    [Header("References")]
+    [Header("Mouse Look")]
+    public Transform cameraPivot;
     public Transform cameraTransform;
+    public float mouseSensitivity = 2.5f;
+    public float minPitch = -60f;
+    public float maxPitch = 80f;
+
+    [Header("References")]
     public OxygenSystem oxygenSystem;
-    public float mouseSensitivity = 15f;
     
     private Rigidbody _rigidbody;
-    private float _xRotation;
-    private float _yRotation;
+    private float _pitch;
     [SerializeField] private float _currentDepth;
 
     void Awake()
     {
         _rigidbody = GetComponent<Rigidbody>();
         _rigidbody.useGravity = false;
+
+        if (cameraPivot == null)
+        {
+            cameraPivot = cameraTransform;
+        }
+
+        if (cameraPivot != null)
+        {
+            _pitch = NormalizeAngle(cameraPivot.localEulerAngles.x);
+        }
     }
 
     void Update()
@@ -42,14 +56,16 @@ public class PlayerUnderwaterMovement : MonoBehaviour
 
     void HandleLook()
     {
-        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity;
-        float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity;
-        
-        _xRotation -= mouseY;
-        _xRotation = Mathf.Clamp(_xRotation, -90f, 90f);
-        
-        cameraTransform.localRotation = Quaternion.Euler(_xRotation, 0f, 0f);
-        transform.Rotate(Vector3.up, mouseX);
+        float mouseX = Input.GetAxisRaw("Mouse X") * mouseSensitivity;
+        float mouseY = Input.GetAxisRaw("Mouse Y") * mouseSensitivity;
+
+        transform.Rotate(Vector3.up, mouseX, Space.World);
+
+        _pitch = Mathf.Clamp(_pitch - mouseY, minPitch, maxPitch);
+        if (cameraPivot != null)
+        {
+            cameraPivot.localRotation = Quaternion.Euler(_pitch, 0f, 0f);
+        }
     }
 
     void HandleSwim()
@@ -57,7 +73,8 @@ public class PlayerUnderwaterMovement : MonoBehaviour
         float h =  Input.GetAxis("Horizontal");
         float v = Input.GetAxis("Vertical");
         
-        Vector3 swimDirection = cameraTransform.forward * v + cameraTransform.right * h;
+        Transform lookReference = cameraTransform != null ? cameraTransform : transform;
+        Vector3 swimDirection = lookReference.forward * v + lookReference.right * h;
         bool sprinting = Input.GetKey(KeyCode.LeftShift);
         float speed = sprinting ? sprintMaxSpeed : swimSpeed;
 
@@ -84,6 +101,11 @@ public class PlayerUnderwaterMovement : MonoBehaviour
         {
             oxygenSystem.SetDepth(_currentDepth);
         }
+    }
+
+    private static float NormalizeAngle(float angle)
+    {
+        return angle > 180f ? angle - 360f : angle;
     }
 
     public void EnableUnderwaterMode(bool enable)
