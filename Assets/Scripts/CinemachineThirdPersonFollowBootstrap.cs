@@ -86,6 +86,14 @@ public static class CinemachineThirdPersonFollowBootstrap
         {
             playerCamera.transform.SetParent(null, true);
         }
+        GameObject cameraRig = GameObject.Find("CameraRig");
+        if (cameraRig != null)
+        {
+            return cameraRig.transform;
+        }
+
+        GameObject cameraTarget = GameObject.Find("CameraTarget");
+        return cameraTarget != null ? cameraTarget.transform : null;
     }
 
     private static CinemachineCamera GetOrCreateVirtualCamera()
