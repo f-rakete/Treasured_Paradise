@@ -1465,6 +1465,9 @@ MonoBehaviour:
   CameraRig: {fileID: 1440312019}
   CameraTarget: {fileID: 1539251607}
   CameraFollowSpeed: 19.5
+  detachCameraRigOnStart: 1
+  followPlayerRootInsteadOfAnimatedTarget: 1
+  cameraLocalOffset: {x: 0.06994629, y: 2.4300003, z: -1.9700012}
   characterAnimator: {fileID: 2033586670}
 --- !u!95 &1511647259
 Animator:
@@ -2470,7 +2473,10 @@ MonoBehaviour:
     m_Bits: 64
   CameraRig: {fileID: 1440312019}
   CameraTarget: {fileID: 1539251607}
-  CameraFollowSpeed: 1.5
+  CameraFollowSpeed: 20
+  detachCameraRigOnStart: 1
+  followPlayerRootInsteadOfAnimatedTarget: 1
+  cameraLocalOffset: {x: 0.06994629, y: 2.4300003, z: -1.9700012}
   characterAnimator: {fileID: 1511647259}
 --- !u!1 &2088097971
 GameObject:
