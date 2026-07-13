@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.Serialization;
 
 public class PlayerLandMovement : MonoBehaviour
 {
@@ -7,26 +6,15 @@ public class PlayerLandMovement : MonoBehaviour
     public float walkSpeed = 10f;
     public float runSpeed = 19f;
     public float gravity = -9.81f;
-    [FormerlySerializedAs("jumpForce")] public float jumpHeight = 4.5f;
-
-    [Header("Look")] 
-    public float mouseSensitivity = 5f;
-    public Transform cameraTransform;
+    public float jumpHeight = 4.5f;
 
     [Header("Ground Check")] 
     public float groundDistance = 0.4f;
     public LayerMask groundMask;
 
-    [Header("Camera")] 
-    public Camera CameraRig;
-    public Camera CameraTarget;
-    public float CameraFollowSpeed;
-
     [SerializeField] private Animator characterAnimator;
     private CharacterController _characterController;
-    private Vector2 _moveInput;
     private Vector3 _velocity;
-    private float _xRotation;
     private bool _isGrounded;
     private bool _sprinting;
 
@@ -40,17 +28,10 @@ public class PlayerLandMovement : MonoBehaviour
         }
     }
 
-    void Start()
-    {
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
-    }
-
     void Update()
     {
         CheckIfGrounded();
         HandleMove();
-        HandleLook();
     }
 
     void HandleMove()
@@ -59,7 +40,6 @@ public class PlayerLandMovement : MonoBehaviour
 
         float h = Input.GetAxis("Horizontal");
         float v = Input.GetAxis("Vertical");
-        _moveInput = new Vector2(h, v);
         _sprinting = Input.GetKey(KeyCode.LeftShift);
 
         Vector3 move = transform.right * h + transform.forward * v;
@@ -75,20 +55,9 @@ public class PlayerLandMovement : MonoBehaviour
         //Gravity
         _velocity.y += gravity * Time.deltaTime;
         _characterController.Move(_velocity * Time.deltaTime);
-    }
 
-    void HandleLook()
-    {
-        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime;
-        float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity * Time.deltaTime;
-        float speed = _moveInput.magnitude * (_sprinting ? 1f : 0.5f);
-
-        characterAnimator.SetFloat("Speed", speed, 0.1f, Time.deltaTime);
-        _xRotation -= mouseY;
-        _xRotation = Mathf.Clamp(_xRotation, -90f, 90f);
-
-        cameraTransform.localRotation = Quaternion.Euler(_xRotation, 0f, 0f);
-        transform.Rotate(Vector3.up, mouseX);
+        float animationSpeed = new Vector2(h, v).magnitude * (_sprinting ? 1f : 0.5f);
+        characterAnimator.SetFloat("Speed", animationSpeed, 0.1f, Time.deltaTime);
     }
 
     //Called by PlayerSwitchMode when entering water
