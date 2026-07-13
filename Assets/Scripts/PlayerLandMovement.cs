@@ -21,8 +21,8 @@ public class PlayerLandMovement : MonoBehaviour
     public LayerMask groundMask;
 
     [Header("Camera")]
-    public Transform CameraRig;
-    public Transform CameraTarget;
+    public Camera CameraRig;
+    public Camera CameraTarget;
     [Min(0f)] public float CameraFollowSpeed = 20f;
     public bool detachCameraRigOnStart = true;
     public bool followPlayerRootInsteadOfAnimatedTarget = true;
