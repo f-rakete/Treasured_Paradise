@@ -1142,10 +1142,7 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 8700783698680967558, guid: 6818c4876515248c39ab5a01ee39785a, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1539251604}
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 6818c4876515248c39ab5a01ee39785a, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 2033586672}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 6818c4876515248c39ab5a01ee39785a, type: 3}
 --- !u!1 &1440312015
 GameObject:
@@ -1462,8 +1459,8 @@ MonoBehaviour:
   groundMask:
     serializedVersion: 2
     m_Bits: 64
-  CameraRig: {fileID: 1440312019}
-  CameraTarget: {fileID: 1539251607}
+  CameraRig: {fileID: 2116338403}
+  CameraTarget: {fileID: 1539251604}
   CameraFollowSpeed: 19.5
   detachCameraRigOnStart: 1
   followPlayerRootInsteadOfAnimatedTarget: 1
@@ -2449,35 +2446,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 6818c4876515248c39ab5a01ee39785a, type: 3}
   m_PrefabInstance: {fileID: 1332051644}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &2033586672
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2033586669}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3738d1a5685054082aea7788304b38f0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PlayerLandMovement
-  walkSpeed: 5
-  runSpeed: 10
-  gravity: -9.81
-  jumpHeight: 1.5
-  mouseSensitivity: 75
-  cameraTransform: {fileID: 2116338403}
-  groundDistance: 0.5
-  groundMask:
-    serializedVersion: 2
-    m_Bits: 64
-  CameraRig: {fileID: 1440312019}
-  CameraTarget: {fileID: 1539251607}
-  CameraFollowSpeed: 20
-  detachCameraRigOnStart: 1
-  followPlayerRootInsteadOfAnimatedTarget: 1
-  cameraLocalOffset: {x: 0.06994629, y: 2.4300003, z: -1.9700012}
-  characterAnimator: {fileID: 1511647259}
 --- !u!1 &2088097971
 GameObject:
   m_ObjectHideFlags: 0
