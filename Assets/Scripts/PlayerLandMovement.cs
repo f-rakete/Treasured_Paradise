@@ -20,7 +20,10 @@ public class PlayerLandMovement : MonoBehaviour
     [Header("Camera")] 
     public Camera CameraRig;
     public Camera CameraTarget;
-    public float CameraFollowSpeed;
+    [Min(0f)] public float CameraFollowSpeed = 20f;
+    public bool detachCameraRigOnStart = true;
+    public bool followPlayerRootInsteadOfAnimatedTarget = true;
+    public Vector3 cameraLocalOffset = new Vector3(0f, 2.43f, -1.97f);
 
     [SerializeField] private Animator characterAnimator;
     private CharacterController _characterController;
@@ -29,6 +32,8 @@ public class PlayerLandMovement : MonoBehaviour
     private float _xRotation;
     private bool _isGrounded;
     private bool _sprinting;
+    private Transform _cameraRigTransform;
+    private Transform _cameraTargetTransform;
 
     private void Awake()
     {
@@ -38,12 +43,27 @@ public class PlayerLandMovement : MonoBehaviour
         {
             Debug.LogError("characterAnimator is not assigned on " + gameObject.name, gameObject);
         }
+
+        _cameraRigTransform = CameraRig != null ? CameraRig.transform : cameraTransform;
+        _cameraTargetTransform = CameraTarget != null ? CameraTarget.transform : null;
+
+        if (_cameraRigTransform != null && cameraLocalOffset == Vector3.zero)
+        {
+            cameraLocalOffset = transform.InverseTransformPoint(_cameraRigTransform.position);
+        }
     }
 
     void Start()
     {
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+
+        if (detachCameraRigOnStart && _cameraRigTransform != null)
+        {
+            _cameraRigTransform.SetParent(null, true);
+        }
+
+        SnapCameraRigToFollowPosition();
     }
 
     void Update()
@@ -51,6 +71,11 @@ public class PlayerLandMovement : MonoBehaviour
         CheckIfGrounded();
         HandleMove();
         HandleLook();
+    }
+
+    void LateUpdate()
+    {
+        UpdateCameraRig();
     }
 
     void HandleMove()
@@ -75,6 +100,34 @@ public class PlayerLandMovement : MonoBehaviour
         //Gravity
         _velocity.y += gravity * Time.deltaTime;
         _characterController.Move(_velocity * Time.deltaTime);
+    }
+
+    void UpdateCameraRig()
+    {
+        if (_cameraRigTransform == null) return;
+
+        Vector3 targetPosition = GetCameraFollowPosition();
+        float followT = CameraFollowSpeed <= 0f ? 1f : 1f - Mathf.Exp(-CameraFollowSpeed * Time.deltaTime);
+        _cameraRigTransform.position = Vector3.Lerp(_cameraRigTransform.position, targetPosition, followT);
+        _cameraRigTransform.rotation = Quaternion.Euler(0f, transform.eulerAngles.y, 0f);
+    }
+
+    void SnapCameraRigToFollowPosition()
+    {
+        if (_cameraRigTransform == null) return;
+
+        _cameraRigTransform.position = GetCameraFollowPosition();
+        _cameraRigTransform.rotation = Quaternion.Euler(0f, transform.eulerAngles.y, 0f);
+    }
+
+    Vector3 GetCameraFollowPosition()
+    {
+        if (!followPlayerRootInsteadOfAnimatedTarget && _cameraTargetTransform != null)
+        {
+            return _cameraTargetTransform.position;
+        }
+
+        return transform.TransformPoint(cameraLocalOffset);
     }
 
     void HandleLook()
