@@ -3,30 +3,34 @@ using UnityEngine.Serialization;
 
 public class PlayerLandMovement : MonoBehaviour
 {
-    [Header("Movement")] 
+    [Header("Movement")]
     public float walkSpeed = 10f;
     public float runSpeed = 19f;
     public float gravity = -9.81f;
     [FormerlySerializedAs("jumpForce")] public float jumpHeight = 4.5f;
 
-    [Header("Look")] 
-    public float mouseSensitivity = 5f;
+    [Header("Mouse Look")]
+    [Tooltip("Mouse sensitivity in degrees per mouse unit.")]
+    public float mouseSensitivity = 2.5f;
+    [Tooltip("Pivot that pitches up and down. If empty, the assigned camera transform is used.")]
+    public Transform cameraPivot;
+    [Tooltip("Actual camera transform. If this is parented under the pivot, its local offset is maintained.")]
     public Transform cameraTransform;
+    public float minPitch = -35f;
+    public float maxPitch = 70f;
+    public bool lockCursor = true;
+    public Vector3 pivotOffset = new Vector3(0f, 1.7f, 0f);
+    public Vector3 cameraOffset = new Vector3(0f, 0f, -4f);
 
-    [Header("Ground Check")] 
+    [Header("Ground Check")]
     public float groundDistance = 0.4f;
     public LayerMask groundMask;
-
-    [Header("Camera")] 
-    public Camera CameraRig;
-    public Camera CameraTarget;
-    public float CameraFollowSpeed;
 
     [SerializeField] private Animator characterAnimator;
     private CharacterController _characterController;
     private Vector2 _moveInput;
     private Vector3 _velocity;
-    private float _xRotation;
+    private float _pitch;
     private bool _isGrounded;
     private bool _sprinting;
 
@@ -34,26 +38,42 @@ public class PlayerLandMovement : MonoBehaviour
     {
         _characterController = GetComponent<CharacterController>();
 
+        if (cameraPivot == null)
+        {
+            cameraPivot = cameraTransform;
+        }
+
+        if (cameraPivot != null)
+        {
+            Vector3 euler = cameraPivot.localEulerAngles;
+            _pitch = Mathf.Clamp(NormalizeAngle(euler.x), minPitch, maxPitch);
+        }
+
         if (characterAnimator == null)
         {
             Debug.LogError("characterAnimator is not assigned on " + gameObject.name, gameObject);
         }
     }
 
-    void Start()
+    private void Start()
     {
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
+        SetCursorLock(lockCursor);
     }
 
-    void Update()
+    private void Update()
     {
         CheckIfGrounded();
-        HandleMove();
         HandleLook();
+        HandleMove();
+        UpdateAnimator();
     }
 
-    void HandleMove()
+    private void LateUpdate()
+    {
+        ApplyCameraPose();
+    }
+
+    private void HandleMove()
     {
         if (_isGrounded && _velocity.y < 0f) _velocity.y = -2f;
 
@@ -63,44 +83,77 @@ public class PlayerLandMovement : MonoBehaviour
         _sprinting = Input.GetKey(KeyCode.LeftShift);
 
         Vector3 move = transform.right * h + transform.forward * v;
+        move = Vector3.ClampMagnitude(move, 1f);
         float speed = _sprinting ? runSpeed : walkSpeed;
         _characterController.Move(move * (speed * Time.deltaTime));
 
-        //Jump
         if (Input.GetButtonDown("Jump") && _isGrounded)
         {
             _velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
         }
 
-        //Gravity
         _velocity.y += gravity * Time.deltaTime;
         _characterController.Move(_velocity * Time.deltaTime);
     }
 
-    void HandleLook()
+    private void HandleLook()
     {
-        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime;
-        float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity * Time.deltaTime;
-        float speed = _moveInput.magnitude * (_sprinting ? 1f : 0.5f);
+        float mouseX = Input.GetAxisRaw("Mouse X") * mouseSensitivity;
+        float mouseY = Input.GetAxisRaw("Mouse Y") * mouseSensitivity;
 
-        characterAnimator.SetFloat("Speed", speed, 0.1f, Time.deltaTime);
-        _xRotation -= mouseY;
-        _xRotation = Mathf.Clamp(_xRotation, -90f, 90f);
+        transform.Rotate(Vector3.up, mouseX, Space.World);
 
-        cameraTransform.localRotation = Quaternion.Euler(_xRotation, 0f, 0f);
-        transform.Rotate(Vector3.up, mouseX);
+        _pitch = Mathf.Clamp(_pitch - mouseY, minPitch, maxPitch);
+        ApplyCameraPose();
     }
 
-    //Called by PlayerSwitchMode when entering water
+    private void ApplyCameraPose()
+    {
+        if (cameraPivot == null) return;
+
+        cameraPivot.localPosition = pivotOffset;
+        cameraPivot.localRotation = Quaternion.Euler(_pitch, 0f, 0f);
+
+        if (cameraTransform != null)
+        {
+            cameraTransform.localPosition = cameraOffset;
+            cameraTransform.localRotation = Quaternion.identity;
+        }
+    }
+
+    private void UpdateAnimator()
+    {
+        if (characterAnimator == null) return;
+
+        float speed = Mathf.Clamp01(_moveInput.magnitude) * (_sprinting ? 1f : 0.5f);
+        characterAnimator.SetFloat("Speed", speed, 0.1f, Time.deltaTime);
+    }
+
     public void EnableLandMode(bool enable)
     {
         _characterController.enabled = enable;
-        this.enabled = enable;
+        enabled = enable;
+
+        if (enable)
+        {
+            SetCursorLock(lockCursor);
+        }
     }
 
-    void CheckIfGrounded()
+    private void CheckIfGrounded()
     {
         Vector3 feetPosition = transform.position + Vector3.down * (_characterController.height / 2f);
         _isGrounded = Physics.CheckSphere(feetPosition, groundDistance, groundMask);
+    }
+
+    private static float NormalizeAngle(float angle)
+    {
+        return angle > 180f ? angle - 360f : angle;
+    }
+
+    private static void SetCursorLock(bool shouldLock)
+    {
+        Cursor.lockState = shouldLock ? CursorLockMode.Locked : CursorLockMode.None;
+        Cursor.visible = !shouldLock;
     }
 }
