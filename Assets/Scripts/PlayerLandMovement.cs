@@ -3,21 +3,24 @@ using UnityEngine.Serialization;
 
 public class PlayerLandMovement : MonoBehaviour
 {
-    [Header("Movement")] 
+    [Header("Movement")]
     public float walkSpeed = 10f;
     public float runSpeed = 19f;
     public float gravity = -9.81f;
     [FormerlySerializedAs("jumpForce")] public float jumpHeight = 4.5f;
+    [Min(0f)] public float turnSpeed = 12f;
 
-    [Header("Look")] 
+    [Header("Look")]
     public float mouseSensitivity = 5f;
     public Transform cameraTransform;
+    public float minPitch = -35f;
+    public float maxPitch = 70f;
 
-    [Header("Ground Check")] 
+    [Header("Ground Check")]
     public float groundDistance = 0.4f;
     public LayerMask groundMask;
 
-    [Header("Camera")] 
+    [Header("Camera")]
     public Camera CameraRig;
     public Camera CameraTarget;
     [Min(0f)] public float CameraFollowSpeed = 20f;
@@ -29,11 +32,13 @@ public class PlayerLandMovement : MonoBehaviour
     private CharacterController _characterController;
     private Vector2 _moveInput;
     private Vector3 _velocity;
-    private float _xRotation;
+    private float _cameraPitch;
+    private float _cameraYaw;
     private bool _isGrounded;
     private bool _sprinting;
     private Transform _cameraRigTransform;
     private Transform _cameraTargetTransform;
+    private float _cameraDistance;
 
     private void Awake()
     {
@@ -51,6 +56,11 @@ public class PlayerLandMovement : MonoBehaviour
         {
             cameraLocalOffset = transform.InverseTransformPoint(_cameraRigTransform.position);
         }
+
+        _cameraDistance = Mathf.Max(0.1f, Mathf.Abs(cameraLocalOffset.z));
+        _cameraYaw = transform.eulerAngles.y;
+        _cameraPitch = _cameraRigTransform != null ? NormalizeAngle(_cameraRigTransform.eulerAngles.x) : 0f;
+        _cameraPitch = Mathf.Clamp(_cameraPitch, minPitch, maxPitch);
     }
 
     void Start()
@@ -69,8 +79,8 @@ public class PlayerLandMovement : MonoBehaviour
     void Update()
     {
         CheckIfGrounded();
-        HandleMove();
         HandleLook();
+        HandleMove();
     }
 
     void LateUpdate()
@@ -87,9 +97,16 @@ public class PlayerLandMovement : MonoBehaviour
         _moveInput = new Vector2(h, v);
         _sprinting = Input.GetKey(KeyCode.LeftShift);
 
-        Vector3 move = transform.right * h + transform.forward * v;
+        Vector3 move = GetCameraPlanarForward() * v + GetCameraPlanarRight() * h;
+        move = Vector3.ClampMagnitude(move, 1f);
         float speed = _sprinting ? runSpeed : walkSpeed;
         _characterController.Move(move * (speed * Time.deltaTime));
+
+        if (move.sqrMagnitude > 0.0001f)
+        {
+            Quaternion targetRotation = Quaternion.LookRotation(move, Vector3.up);
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, 1f - Mathf.Exp(-turnSpeed * Time.deltaTime));
+        }
 
         //Jump
         if (Input.GetButtonDown("Jump") && _isGrounded)
@@ -108,40 +125,71 @@ public class PlayerLandMovement : MonoBehaviour
 
         Vector3 targetPosition = GetCameraFollowPosition();
         float followT = CameraFollowSpeed <= 0f ? 1f : 1f - Mathf.Exp(-CameraFollowSpeed * Time.deltaTime);
-        _cameraRigTransform.position = Vector3.Lerp(_cameraRigTransform.position, targetPosition, followT);
-        _cameraRigTransform.rotation = Quaternion.Euler(0f, transform.eulerAngles.y, 0f);
+        Vector3 smoothedTarget = Vector3.Lerp(GetCurrentCameraTargetPosition(), targetPosition, followT);
+        ApplyCameraOrbit(smoothedTarget);
     }
 
     void SnapCameraRigToFollowPosition()
     {
         if (_cameraRigTransform == null) return;
 
-        _cameraRigTransform.position = GetCameraFollowPosition();
-        _cameraRigTransform.rotation = Quaternion.Euler(0f, transform.eulerAngles.y, 0f);
+        ApplyCameraOrbit(GetCameraFollowPosition());
     }
 
     Vector3 GetCameraFollowPosition()
     {
-        if (!followPlayerRootInsteadOfAnimatedTarget && _cameraTargetTransform != null)
-        {
-            return _cameraTargetTransform.position;
-        }
+        Vector3 targetPosition = !followPlayerRootInsteadOfAnimatedTarget && _cameraTargetTransform != null
+            ? _cameraTargetTransform.position
+            : transform.position;
 
-        return transform.TransformPoint(cameraLocalOffset);
+        return targetPosition + Vector3.up * cameraLocalOffset.y + GetCameraPlanarRight() * cameraLocalOffset.x;
+    }
+
+    Vector3 GetCurrentCameraTargetPosition()
+    {
+        Quaternion cameraRotation = Quaternion.Euler(_cameraPitch, _cameraYaw, 0f);
+        return _cameraRigTransform.position + cameraRotation * Vector3.forward * _cameraDistance;
+    }
+
+    void ApplyCameraOrbit(Vector3 targetPosition)
+    {
+        Quaternion cameraRotation = Quaternion.Euler(_cameraPitch, _cameraYaw, 0f);
+        _cameraRigTransform.SetPositionAndRotation(
+            targetPosition - cameraRotation * Vector3.forward * _cameraDistance,
+            cameraRotation);
     }
 
     void HandleLook()
     {
-        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime;
-        float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity * Time.deltaTime;
+        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity;
+        float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity;
         float speed = _moveInput.magnitude * (_sprinting ? 1f : 0.5f);
 
-        characterAnimator.SetFloat("Speed", speed, 0.1f, Time.deltaTime);
-        _xRotation -= mouseY;
-        _xRotation = Mathf.Clamp(_xRotation, -90f, 90f);
+        if (characterAnimator != null)
+        {
+            characterAnimator.SetFloat("Speed", speed, 0.1f, Time.deltaTime);
+        }
 
-        cameraTransform.localRotation = Quaternion.Euler(_xRotation, 0f, 0f);
-        transform.Rotate(Vector3.up, mouseX);
+        _cameraYaw += mouseX;
+        _cameraPitch = Mathf.Clamp(_cameraPitch - mouseY, minPitch, maxPitch);
+    }
+
+    Vector3 GetCameraPlanarForward()
+    {
+        Vector3 forward = Quaternion.Euler(0f, _cameraYaw, 0f) * Vector3.forward;
+        return forward.normalized;
+    }
+
+    Vector3 GetCameraPlanarRight()
+    {
+        Vector3 right = Quaternion.Euler(0f, _cameraYaw, 0f) * Vector3.right;
+        return right.normalized;
+    }
+
+    static float NormalizeAngle(float angle)
+    {
+        angle %= 360f;
+        return angle > 180f ? angle - 360f : angle;
     }
 
     //Called by PlayerSwitchMode when entering water
