@@ -14,11 +14,6 @@ public class ThirdPersonFollowTargetController : MonoBehaviour
     private float _pitch;
     private float _yaw;
 
-    public void SetPlayerBody(Transform targetPlayerBody)
-    {
-        playerBody = targetPlayerBody;
-    }
-
     private void Awake()
     {
         if (playerBody == null)
